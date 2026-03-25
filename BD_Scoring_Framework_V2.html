@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMAX BD Scoring Framework V2 — Hệ Thống Chấm Điểm 2 Lớp</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface-2: #1a1a26;
+  --surface-3: #22222f;
+  --border: #2a2a3a;
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --text-muted: #555570;
+  --accent-blue: #4a7aff;
+  --accent-cyan: #00d4aa;
+  --accent-orange: #ff8a3d;
+  --accent-red: #ff4a6a;
+  --accent-purple: #9a6aff;
+  --accent-yellow: #ffd43b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+.header {
+  text-align: center;
+  padding: 60px 0 50px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 50px;
+}
+.header-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  margin-bottom: 16px;
+}
+.header h1 {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+}
+.header p {
+  font-size: 15px;
+  color: var(--text-dim);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.section { margin-bottom: 56px; }
+.section-number {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent-blue);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.section h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+.section .subtitle { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; }
+
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr 80px 1fr;
+  gap: 0;
+  align-items: center;
+  margin: 32px 0;
+}
+.arch-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+}
+.arch-box h3 { font-size: 18px; margin-bottom: 6px; }
+.arch-box .score-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--accent-cyan);
+  margin-bottom: 12px;
+}
+.arch-box p { font-size: 13px; color: var(--text-dim); }
+.arch-connector {
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  color: var(--text-muted);
+}
+.arch-result {
+  background: linear-gradient(135deg, rgba(74,122,255,0.12), rgba(0,212,170,0.12));
+  border: 1px solid rgba(74,122,255,0.3);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin-top: 20px;
+}
+.arch-result h3 { font-size: 16px; color: var(--accent-blue); }
+.arch-result p { font-size: 13px; color: var(--text-dim); margin-top: 6px; }
+
+.matrix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+.matrix-cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.matrix-cell h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.matrix-cell .tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.matrix-cell p { font-size: 13px; color: var(--text-dim); }
+.tag-green { background: rgba(0,212,170,0.15); color: var(--accent-cyan); }
+.tag-blue { background: rgba(74,122,255,0.15); color: var(--accent-blue); }
+.tag-orange { background: rgba(255,138,61,0.15); color: var(--accent-orange); }
+.tag-red { background: rgba(255,74,106,0.15); color: var(--accent-red); }
+
+.dim-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 20px;
+}
+.dim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.dim-header h3 { font-size: 17px; font-weight: 600; }
+.dim-pts {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.dim-pts-blue { background: rgba(74,122,255,0.15); color: var(--accent-blue); }
+.dim-pts-cyan { background: rgba(0,212,170,0.15); color: var(--accent-cyan); }
+.dim-why {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+.score-table th {
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.score-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(42,42,58,0.5);
+  vertical-align: top;
+}
+.score-table tr:last-child td { border-bottom: none; }
+.score-table .pts { font-family: 'DM Mono', monospace; color: var(--accent-cyan); white-space: nowrap; }
+.score-table .data-src { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+.seasonal-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+.seasonal-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.seasonal-table th:first-child { text-align: left; }
+.seasonal-table td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid rgba(42,42,58,0.3);
+}
+.seasonal-table td:first-child { text-align: left; font-weight: 500; }
+.peak { background: rgba(255,74,106,0.15); color: var(--accent-red); border-radius: 4px; font-weight: 600; }
+.warm { background: rgba(255,138,61,0.1); color: var(--accent-orange); border-radius: 4px; }
+.low { color: var(--text-muted); }
+
+.example-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  margin: 16px 0;
+}
+.example-card h4 { font-size: 15px; margin-bottom: 4px; }
+.example-card .meta { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+.score-bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 10px; }
+.score-bar-label { font-size: 12px; width: 180px; flex-shrink: 0; color: var(--text-dim); }
+.score-bar-track { flex: 1; height: 8px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 4px; }
+.fill-blue { background: var(--accent-blue); }
+.fill-cyan { background: var(--accent-cyan); }
+.fill-orange { background: var(--accent-orange); }
+.fill-purple { background: var(--accent-purple); }
+.fill-yellow { background: var(--accent-yellow); }
+.fill-red { background: var(--accent-red); }
+.score-bar-pts { font-family: 'DM Mono', monospace; font-size: 12px; width: 50px; text-align: right; flex-shrink: 0; }
+
+.note-box {
+  background: rgba(74,122,255,0.06);
+  border: 1px solid rgba(74,122,255,0.2);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.note-box strong { color: var(--text); }
+
+@media (max-width: 700px) {
+  .arch-grid { grid-template-columns: 1fr; gap: 12px; }
+  .arch-connector { transform: rotate(90deg); }
+  .matrix-grid { grid-template-columns: 1fr; }
+  .header h1 { font-size: 26px; }
+  .score-bar-label { width: 120px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="header-label">PMAX BD Operating System</div>
+  <h1>Data Scoring Framework V2</h1>
+  <p>Hệ thống chấm điểm 2 lớp: Opportunity Score (công ty này có đáng đánh không?) và Activity Score (PMAX đang ở đâu với công ty này?). Áp dụng cho 932 công ty, 5 BD reps.</p>
+</div>
+
+<!-- 01 -->
+<div class="section">
+  <div class="section-number">01 — Kiến trúc tổng thể</div>
+  <h2>Kiến Trúc Scoring 2 Lớp (2-Layer Architecture)</h2>
+  <div class="subtitle">Tách biệt "cơ hội" và "tiến trình" để ra quyết định chính xác hơn</div>
+
+  <div class="arch-grid">
+    <div class="arch-box">
+      <h3>LỚP 1 — Opportunity Score</h3>
+      <div class="score-label">Tối đa 100 điểm</div>
+      <p>Đánh giá khách quan: công ty này có đáng để PMAX theo đuổi không? Bao gồm tiềm năng doanh thu, độ phù hợp sản phẩm, thời điểm mùa vụ, độ khó tiếp cận, nguồn lực triển khai, và lịch sử quan hệ.</p>
+      <p style="margin-top:8px;"><strong style="color:var(--accent-cyan)">6 dimensions mới</strong> — Tiềm năng doanh thu, Phù hợp sản phẩm, Thời điểm mùa vụ, Cấu trúc mua hàng, Năng lực triển khai, Lịch sử quan hệ</p>
+    </div>
+    <div class="arch-connector">&times;</div>
+    <div class="arch-box">
+      <h3>LỚP 2 — Activity Score</h3>
+      <div class="score-label">Tối đa 100 điểm</div>
+      <p>Đo lường nội bộ: PMAX đã tương tác với công ty này đến đâu? 4 dimensions hiện tại giữ nguyên vì đã có data 932 công ty.</p>
+      <p style="margin-top:8px;"><strong style="color:var(--accent-blue)">4 dimensions cũ</strong> — Tiến trình Pipeline, Cường độ Tương tác, Độ phù hợp ICP, Động lực & Tần suất</p>
+    </div>
+  </div>
+  <div class="arch-result">
+    <h3>MA TRẬN ƯU TIÊN = Opportunity Score &times; Activity Score</h3>
+    <p>Tạo ra ma trận 2 chiều, phân loại 932 công ty vào 4 góc phần tư hành động</p>
+  </div>
+</div>
+
+<!-- 02 -->
+<div class="section">
+  <div class="section-number">02 — Ma trận ưu tiên</div>
+  <h2>Ma Trận Ưu Tiên 4 Góc (Priority Quadrant)</h2>
+  <div class="subtitle">Opportunity Score (trục Y) &times; Activity Score (trục X) = 4 hành động khác nhau</div>
+
+  <div class="matrix-grid">
+    <div class="matrix-cell" style="border-left: 3px solid var(--accent-red);">
+      <h4>Q1: KÍCH HOẠT NGAY</h4>
+      <span class="tag tag-red">Cơ hội CAO + Hoạt động THẤP</span>
+      <p>Cơ hội lớn nhưng PMAX chưa bắt đầu hoặc mới tiếp cận sơ bộ. Đây là "vàng chưa đào" — cần phân bổ BD ngay, tạo lần tiếp xúc có ý nghĩa đầu tiên trong vòng 7 ngày.</p>
+      <p style="margin-top:6px;color:var(--text)"><strong>Ví dụ:</strong> Công ty Tài chính lớn, đúng mùa lập ngân sách, chưa liên hệ lần nào.</p>
+    </div>
+    <div class="matrix-cell" style="border-left: 3px solid var(--accent-cyan);">
+      <h4>Q2: ĐẨY ĐỂ CHỐT</h4>
+      <span class="tag tag-green">Cơ hội CAO + Hoạt động CAO</span>
+      <p>Cơ hội tốt và PMAX đã có tương tác sâu. Ưu tiên cao nhất — đẩy deal qua giai đoạn tiếp theo, phân bổ nhân sự cấp cao hỗ trợ chốt.</p>
+      <p style="margin-top:6px;color:var(--text)"><strong>Ví dụ:</strong> Techcombank (53 tỷ) đang ở Qualified Brief, cần đẩy sang Verbal tuần này.</p>
+    </div>
+    <div class="matrix-cell" style="border-left: 3px solid var(--text-muted);">
+      <h4>Q3: HẠ ƯU TIÊN</h4>
+      <span class="tag" style="background:rgba(85,85,112,0.2);color:var(--text-muted);">Cơ hội THẤP + Hoạt động THẤP</span>
+      <p>Không phù hợp và chưa có quan hệ. Không nên bỏ công sức — để trong danh sách theo dõi, chấm điểm lại hàng quý. Giải phóng thời gian BD cho Q1 và Q2.</p>
+      <p style="margin-top:6px;color:var(--text)"><strong>Ví dụ:</strong> Công ty nhỏ, ngoài ngành trọng tâm, không có ngân sách marketing rõ ràng.</p>
+    </div>
+    <div class="matrix-cell" style="border-left: 3px solid var(--accent-orange);">
+      <h4>Q4: ĐÁNH GIÁ LẠI</h4>
+      <span class="tag tag-orange">Cơ hội THẤP + Hoạt động CAO</span>
+      <p>PMAX đã bỏ nhiều công sức nhưng cơ hội thực tế thấp. Cần xem lại: có nên tiếp tục không? Deal quá nhỏ? Lợi nhuận quá thấp? Quy trình mua quá phức tạp? Nếu không cải thiện — chuyển nguồn lực sang Q1.</p>
+      <p style="margin-top:6px;color:var(--text)"><strong>Ví dụ:</strong> NIMO TV — đã gửi Brief nhưng Pinpoint chưa phản hồi, deal chỉ 270 triệu, ngoài ngành trọng tâm.</p>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Ngưỡng phân loại đề xuất:</strong> Opportunity Score trên 60 = "CAO", dưới 60 = "THẤP". Activity Score trên 50 = "CAO", dưới 50 = "THẤP". Các ngưỡng này cần hiệu chỉnh sau khi chạy scoring lên 932 công ty và xem phân bổ thực tế. Mục tiêu: Q1 chiếm 15-20% tổng số, Q2 chiếm 5-10%.
+  </div>
+</div>
+
+<!-- 03 -->
+<div class="section">
+  <div class="section-number">03 — Lớp 1 chi tiết</div>
+  <h2>Opportunity Score — 6 Chiều Đánh Giá (Tối đa 100 điểm)</h2>
+  <div class="subtitle">Trả lời: "Công ty này có đáng đánh không, bằng gì, vào lúc nào"</div>
+
+  <!-- D1 -->
+  <div class="dim-card">
+    <div class="dim-header">
+      <h3>D1. Tiềm Năng Doanh Thu & Kinh Tế Deal</h3>
+      <span class="dim-pts dim-pts-cyan">25 điểm</span>
+    </div>
+    <div class="dim-why">Tại sao 25 điểm (cao nhất)? Vì đây là yếu tố quyết định trực tiếp hiệu quả đầu tư của công sức BD. Team 5 người, mỗi người có khoảng 160 giờ làm việc/tháng — phải ưu tiên deal có doanh thu và biên lợi nhuận tốt. Data hiện tại cho thấy giá trị trung bình hợp đồng ký chỉ 1,3 tỷ trong khi giá trị trung bình Brief là 6,2 tỷ, nghĩa là deal lớn đang rớt — scoring cần phân biệt sớm deal nào đáng theo đuổi.</div>
+    <table class="score-table">
+      <tr><th>Tiêu chí</th><th>Điều kiện</th><th>Điểm</th><th>Nguồn dữ liệu</th></tr>
+      <tr>
+        <td><strong>Quy mô deal ước tính</strong><br>(so với mục tiêu BD)</td>
+        <td>Trên 500 triệu VNĐ/tháng (deal doanh nghiệp lớn)<br>300–500 triệu/tháng (đúng mục tiêu)<br>100–300 triệu/tháng (mức tối thiểu chấp nhận)<br>Dưới 100 triệu/tháng</td>
+        <td class="pts">10<br>7<br>4<br>1</td>
+        <td class="data-src">Bảng kiểm soát AOV, benchmark ngành, ước tính từ brief</td>
+      </tr>
+      <tr>
+        <td><strong>Tỷ suất GP2 ước tính</strong><br>(lợi nhuận gộp cấp 2)</td>
+        <td>Trên 25% (biên tốt — VD: Tư vấn, Influencer)<br>15–25% (trung bình — VD: Sáng tạo, Thương mại điện tử)<br>Dưới 15% (biên mỏng — VD: Media thuần)</td>
+        <td class="pts">8<br>5<br>2</td>
+        <td class="data-src">File COE 2026, dữ liệu chi phí triển khai DPPC</td>
+      </tr>
+      <tr>
+        <td><strong>Xu hướng giá trị vòng đời khách hàng (CLV)</strong><br>(chỉ áp dụng khách cũ)</td>
+        <td>Tăng trưởng (CLV tăng trên 20% so với năm trước)<br>Ổn định (CLV dao động dưới 20%)<br>Suy giảm (CLV giảm trên 20%)<br>Khách mới (chưa có dữ liệu)</td>
+        <td class="pts">7<br>4<br>0<br>3</td>
+        <td class="data-src">Growth VN FY24-26 — tab CLV</td>
+      </tr>
+    </table>
+    <div class="note-box">
+      <strong>Ghi chú thực chiến:</strong> Với khách mới chưa có quy mô deal cụ thể, dùng benchmark ngành. VD: Tài chính doanh nghiệp lớn trung bình 5–10 tỷ/deal (tham khảo Techcombank 53 tỷ, FE Credit, Manulife). Làm đẹp SME trung bình 500 triệu – 2 tỷ. Khi có brief cụ thể thì cập nhật lại.
+    </div>
+  </div>
+
+  <!-- D2 -->
+  <div class="dim-card">
+    <div class="dim-header">
+      <h3>D2. Độ Phù Hợp Sản Phẩm</h3>
+      <span class="dim-pts dim-pts-cyan">20 điểm</span>
+    </div>
+    <div class="dim-why">Tại sao 20 điểm? PMAX có 9 trung tâm chuyên môn (CoE) nhưng Media chiếm 66% GP2, Branding chiếm 45% giải pháp. Nếu khách cần đúng sản phẩm PMAX đang mạnh, xác suất thắng cao hơn và triển khai tốt hơn. Nếu khách cần sản phẩm PMAX đang yếu (VD: Quản lý Thương mại điện tử chỉ chiếm 2% GP2), công sức lớn nhưng năng lực hạn chế.</div>
+    <table class="score-table">
+      <tr><th>Tiêu chí</th><th>Điều kiện</th><th>Điểm</th><th>Nguồn dữ liệu</th></tr>
+      <tr>
+        <td><strong>Nhu cầu sản phẩm chính khớp</strong><br>(sản phẩm chính khách cần)</td>
+        <td>Cần Media Performance/Branding (lõi PMAX — 66% GP2)<br>Cần Sáng tạo/Influencer (PMAX mạnh — 19% GP2)<br>Cần Livestream/TMĐT/Tư vấn (PMAX đang xây dựng)<br>Cần sản phẩm PMAX không có hoặc rất yếu</td>
+        <td class="pts">10<br>7<br>4<br>1</td>
+        <td class="data-src">Brief, nghiên cứu ngành, file COE 2026</td>
+      </tr>
+      <tr>
+        <td><strong>Tiềm năng bán chéo</strong><br>(khả năng bán thêm nhiều sản phẩm)</td>
+        <td>Có thể bán chéo 3+ sản phẩm<br>Có thể bán chéo 2 sản phẩm<br>Chỉ cần 1 sản phẩm duy nhất</td>
+        <td class="pts">5<br>3<br>1</td>
+        <td class="data-src">Đặc điểm ngành, phân tích hồ sơ khách</td>
+      </tr>
+      <tr>
+        <td><strong>Phù hợp chiến lược tăng trưởng</strong><br>(nằm trong ma trận Ansoff)</td>
+        <td>Thuộc ưu tiên Thâm nhập thị trường (VD: Tài chính Media, Làm đẹp TMĐT)<br>Thuộc ưu tiên Phát triển thị trường mới<br>Ngoài ma trận tăng trưởng</td>
+        <td class="pts">5<br>3<br>0</td>
+        <td class="data-src">Growth BD OS 2026 — Ma trận Ansoff</td>
+      </tr>
+    </table>
+    <div class="note-box">
+      <strong>Ánh xạ Phù Hợp Sản Phẩm theo Chiến lược Bowling:</strong><br>
+      Tài chính: Pin 1 = Ngân hàng thương mại (cần Thu hút khách + Media Performance) &rarr; Khớp sản phẩm 10/10<br>
+      Làm đẹp: Pin 1 = Chăm sóc da (cần TMĐT + Social Lead + Sáng tạo) &rarr; Tiềm năng bán chéo 5/5<br>
+      Y tế: Pin 1 = Bệnh viện tư nhân phía Nam (cần Thu hút khách + Media) &rarr; Phù hợp chiến lược 5/5<br>
+      FMCG: Pin 1 = Bánh kẹo (cần Social Lead Camp + IMC) &rarr; Khớp sản phẩm 7/10
+    </div>
+  </div>
+
+  <!-- D3 -->
+  <div class="dim-card">
+    <div class="dim-header">
+      <h3>D3. Thời Điểm Mùa Vụ & Timing</h3>
+      <span class="dim-pts dim-pts-cyan">20 điểm</span>
+    </div>
+    <div class="dim-why">Tại sao 20 điểm? Thời điểm quyết định xác suất thắng. Công ty Làm đẹp vào tháng 9 (trước 11/11) sẽ sẵn sàng chi ngân sách hơn tháng 3. Tài chính vào Q4 (cuối năm) và Q1 (đầu năm) là cao điểm. Nếu scoring không phản ánh thời điểm, BD sẽ gọi đúng công ty nhưng sai lúc — lãng phí công sức.</div>
+    <table class="score-table">
+      <tr><th>Tiêu chí</th><th>Điều kiện</th><th>Điểm</th><th>Nguồn dữ liệu</th></tr>
+      <tr>
+        <td><strong>Khoảng cách đến mùa cao điểm</strong><br>(gần peak bao nhiêu)</td>
+        <td>Đang trong cửa sổ 30–90 ngày trước cao điểm (thời điểm lý tưởng để pitch)<br>Đang trong cửa sổ 90–150 ngày trước cao điểm (bắt đầu tiếp cận)<br>Ngoài cửa sổ cao điểm hoặc ngành ít mùa vụ</td>
+        <td class="pts">10<br>5<br>2</td>
+        <td class="data-src">Lịch mùa vụ ngành (bảng bên dưới)</td>
+      </tr>
+      <tr>
+        <td><strong>Chu kỳ ngân sách</strong><br>(thời điểm phân bổ budget)</td>
+        <td>Đang trong giai đoạn lập kế hoạch/phân bổ ngân sách (thường Q4 cho đa quốc gia, Q1 cho công ty nội địa)<br>Giữa năm tài chính — ngân sách đã phân bổ, còn dư<br>Cuối năm tài chính — ngân sách có thể đã hết</td>
+        <td class="pts">5<br>3<br>1</td>
+        <td class="data-src">Nghiên cứu công ty, dữ liệu tương tác trước đây</td>
+      </tr>
+      <tr>
+        <td><strong>Lịch chiến dịch đã biết</strong><br>(biết trước kế hoạch chạy campaign)</td>
+        <td>Biết rõ công ty có chiến dịch lớn sắp tới (từ dữ liệu cũ hoặc thông tin công khai)<br>Có dấu hiệu sẽ chạy chiến dịch (đang tuyển marketing, phát hành RFP...)<br>Không có thông tin</td>
+        <td class="pts">5<br>3<br>0</td>
+        <td class="data-src">Bảng hoạt động khách hàng, thông tin thị trường, tin tuyển dụng</td>
+      </tr>
+    </table>
+
+    <p style="font-size:14px;font-weight:600;margin:24px 0 12px;">Lịch Mùa Vụ theo Ngành Trọng Tâm PMAX</p>
+    <table class="seasonal-table">
+      <tr>
+        <th>Ngành</th><th>T1</th><th>T2</th><th>T3</th><th>T4</th><th>T5</th><th>T6</th><th>T7</th><th>T8</th><th>T9</th><th>T10</th><th>T11</th><th>T12</th>
+      </tr>
+      <tr>
+        <td>Tài chính</td>
+        <td class="peak">CAO</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="peak">CAO</td>
+      </tr>
+      <tr>
+        <td>Làm đẹp</td>
+        <td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="peak">CAO</td>
+      </tr>
+      <tr>
+        <td>Y tế</td>
+        <td class="warm">Ấm</td><td class="low">-</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="low">-</td><td class="warm">Ấm</td>
+      </tr>
+      <tr>
+        <td>FMCG</td>
+        <td class="peak">CAO</td><td class="peak">CAO</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="peak">CAO</td><td class="peak">CAO</td>
+      </tr>
+      <tr>
+        <td>Gia dụng & Điện tử</td>
+        <td class="warm">Ấm</td><td class="peak">CAO</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="peak">CAO</td>
+      </tr>
+      <tr>
+        <td>Giáo dục</td>
+        <td class="warm">Ấm</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td>
+      </tr>
+      <tr>
+        <td>Ẩm thực (F&B)</td>
+        <td class="peak">CAO</td><td class="peak">CAO</td><td class="low">-</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="peak">CAO</td><td class="peak">CAO</td>
+      </tr>
+      <tr>
+        <td>Ô tô</td>
+        <td class="warm">Ấm</td><td class="low">-</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="low">-</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="warm">Ấm</td><td class="warm">Ấm</td>
+      </tr>
+      <tr>
+        <td>Bất động sản</td>
+        <td class="low">-</td><td class="warm">Ấm</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="warm">Ấm</td><td class="low">-</td><td class="low">-</td><td class="warm">Ấm</td><td class="peak">CAO</td><td class="peak">CAO</td><td class="warm">Ấm</td><td class="low">-</td>
+      </tr>
+    </table>
+    <div class="note-box">
+      <strong>Cách đọc:</strong> CAO = mùa cao điểm, khách hàng đang/sắp chi tiền mạnh — chấm 10 điểm. Ấm = giai đoạn chuẩn bị hoặc nhu cầu vừa — chấm 5 điểm. "-" = mùa thấp — chấm 2 điểm. <strong>Lưu ý:</strong> Cửa sổ tiếp cận lý tưởng là 30–90 ngày TRƯỚC cao điểm (để kịp pitch, brief, proposal trước khi khách cần khởi động dự án).
+    </div>
+  </div>
+
+  <!-- D4 -->
+  <div class="dim-card">
+    <div class="dim-header">
+      <h3>D4. Cấu Trúc Mua Hàng & Khả Năng Tiếp Cận</h3>
+      <span class="dim-pts dim-pts-cyan">15 điểm</span>
+    </div>
+    <div class="dim-why">Tại sao 15 điểm? Quyết định tốc độ deal — từ lần liên hệ đầu tiên đến lúc ký hợp đồng. Hai công ty cùng ngành, cùng quy mô, nhưng một cái chủ doanh nghiệp quyết trong 2 tuần, cái kia đấu thầu 6 tháng qua 3 vòng. Dữ liệu hiện tại: Đại Linh sửa proposal vòng 3, Phú Mỹ Hưng đổi định hướng — dấu hiệu cấu trúc mua phức tạp mà scoring cũ không nắm bắt được.</div>
+    <table class="score-table">
+      <tr><th>Tiêu chí</th><th>Điều kiện</th><th>Điểm</th><th>Nguồn dữ liệu</th></tr>
+      <tr>
+        <td><strong>Tốc độ ra quyết định</strong></td>
+        <td>Chủ doanh nghiệp tự quyết / Startup / SME (thường dưới 4 tuần)<br>Tập đoàn có team marketing quyết định (4–8 tuần)<br>Tập đoàn/Doanh nghiệp nhà nước, duyệt nhiều tầng, procurement phức tạp (8+ tuần)</td>
+        <td class="pts">6<br>4<br>2</td>
+        <td class="data-src">Nghiên cứu công ty, dữ liệu deal trước đây</td>
+      </tr>
+      <tr>
+        <td><strong>Cấp độ người liên hệ</strong><br>(đã tiếp cận được ai)</td>
+        <td>Đã có liên hệ cấp Giám đốc / Trưởng bộ phận Marketing / Người ra quyết định<br>Có liên hệ cấp Trưởng phòng (có ảnh hưởng nhưng không quyết định)<br>Chỉ có nhân viên điều phối / Thực tập sinh hoặc chưa có liên hệ</td>
+        <td class="pts">5<br>3<br>1</td>
+        <td class="data-src">Bảng hoạt động khách hàng, dữ liệu VIP Hunting</td>
+      </tr>
+      <tr>
+        <td><strong>Độ phức tạp quy trình mua</strong></td>
+        <td>Chỉ định thầu / không cần đấu thầu (deal nhỏ hoặc quan hệ tốt)<br>Mời thầu đơn giản / 1–2 vòng (bình thường)<br>Đấu thầu chính thức 3+ vòng / đấu thầu công khai / quy trình nhà nước</td>
+        <td class="pts">4<br>3<br>1</td>
+        <td class="data-src">Kiến thức ngành, lịch sử tương tác</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- D5 -->
+  <div class="dim-card">
+    <div class="dim-header">
+      <h3>D5. Năng Lực Triển Khai & Nguồn Lực</h3>
+      <span class="dim-pts dim-pts-cyan">10 điểm</span>
+    </div>
+    <div class="dim-why">Tại sao chỉ 10 điểm (thấp nhất)? Đây là ràng buộc, không phải động lực. Deal tốt không nên bị từ chối vì năng lực — nhưng cần được đánh dấu để lên kế hoạch nguồn lực trước. Dữ liệu chi phí triển khai cho thấy Livestream chiếm 35% GP2 (cao nhất), Account + Media chiếm 62% chi phí delivery. Thắng thêm 3 deal Livestream cùng lúc khi team đang đầy tải = vấn đề nghiêm trọng.</div>
+    <table class="score-table">
+      <tr><th>Tiêu chí</th><th>Điều kiện</th><th>Điểm</th><th>Nguồn dữ liệu</th></tr>
+      <tr>
+        <td><strong>Tình trạng CoE liên quan</strong><br>(trung tâm chuyên môn còn năng lực?)</td>
+        <td>CoE liên quan đang Xanh (dưới 70% công suất)<br>CoE đang Vàng (70–85% công suất)<br>CoE đang Đỏ (trên 85% — gần đầy tải)</td>
+        <td class="pts">5<br>3<br>1</td>
+        <td class="data-src">Team Triển khai/Vận hành — báo cáo năng lực hàng tháng</td>
+      </tr>
+      <tr>
+        <td><strong>Timeline phù hợp</strong><br>(lịch khởi động khớp nguồn lực?)</td>
+        <td>Khách muốn khởi động khi PMAX có nguồn lực sẵn sàng<br>Lệch 1–2 tháng — có thể điều chỉnh<br>Lệch nhiều hoặc khách cần gấp mà team đang đầy</td>
+        <td class="pts">3<br>2<br>0</td>
+        <td class="data-src">Timeline từ brief, dự báo năng lực Vận hành</td>
+      </tr>
+      <tr>
+        <td><strong>Phù hợp cấp độ team</strong><br>(deal cần team level nào?)</td>
+        <td>Quy mô deal phù hợp level team hiện có (VD: deal 2 tỷ — team trung cấp OK)<br>Deal lớn cần nhân sự cấp cao nhưng cấp cao đang rảnh<br>Deal lớn cần nhân sự cấp cao nhưng cấp cao đang đầy tải</td>
+        <td class="pts">2<br>1<br>0</td>
+        <td class="data-src">Bảng phân bổ nguồn lực</td>
+      </tr>
+    </table>
+    <div class="note-box">
+      <strong>Cách lấy dữ liệu Năng lực:</strong> Không cần hệ thống phức tạp. Chỉ cần 1 bảng tính đơn giản, mỗi CoE (Media, Sáng tạo, Influencer, Livestream, TMĐT, Tư vấn) tự báo cáo hàng tháng: Xanh / Vàng / Đỏ. Trưởng bộ phận Vận hành cập nhật. Agent 1 tự động ánh xạ khi chấm điểm.
+    </div>
+  </div>
+
+  <!-- D6 -->
+  <div class="dim-card">
+    <div class="dim-header">
+      <h3>D6. Lịch Sử Quan Hệ & Tín Hiệu Tin Tưởng</h3>
+      <span class="dim-pts dim-pts-cyan">10 điểm</span>
+    </div>
+    <div class="dim-why">Tại sao 10 điểm? Lịch sử quan hệ là chỉ báo sớm cho tốc độ deal và tỷ lệ thắng. Dữ liệu cho thấy kênh Giới thiệu có tỷ lệ chuyển đổi Brief 69% và Hợp đồng 43% — cao nhất team. Khách cũ quay lại cũng có tỷ lệ chuyển đổi cao hơn tiếp cận nguội. Ngược lại, khách cũ rời đi vì triển khai kém (VD: Abbott giảm 95%) cần được đánh dấu để tránh tiếp cận sai cách.</div>
+    <table class="score-table">
+      <tr><th>Tiêu chí</th><th>Điều kiện</th><th>Điểm</th><th>Nguồn dữ liệu</th></tr>
+      <tr>
+        <td><strong>Chất lượng quan hệ trước đây</strong></td>
+        <td>Khách cũ tốt, rời đi vì hết chiến dịch/ngân sách (dễ giành lại)<br>Khách mới — chưa có lịch sử<br>Khách cũ rời đi vì vấn đề triển khai/quan hệ (cần cẩn thận)</td>
+        <td class="pts">4<br>2<br>0</td>
+        <td class="data-src">Dữ liệu CLV, Bảng hoạt động khách hàng</td>
+      </tr>
+      <tr>
+        <td><strong>Giới thiệu & Kết nối ấm</strong><br>(có được referral không?)</td>
+        <td>Được giới thiệu bởi khách hiện tại đang hài lòng<br>Có kết nối ấm qua đối tác/mạng lưới<br>Tiếp cận nguội — không có kết nối nào</td>
+        <td class="pts">4<br>2<br>0</td>
+        <td class="data-src">BD Scoring trường nguồn, Bảng hoạt động khách hàng</td>
+      </tr>
+      <tr>
+        <td><strong>Vị thế cạnh tranh</strong><br>(đối thủ đang phục vụ khách này?)</td>
+        <td>Khách chưa có agency / tự làm nội bộ (dễ tiếp cận)<br>Đang có agency nhưng có dấu hiệu không hài lòng<br>Đang có agency tốt, quan hệ ổn định</td>
+        <td class="pts">2<br>1<br>0</td>
+        <td class="data-src">Thông tin thị trường, LinkedIn, mối quan hệ trong ngành</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- 04 -->
+<div class="section">
+  <div class="section-number">04 — Lớp 2 (giữ nguyên)</div>
+  <h2>Activity Score — 4 Chiều Cũ (Tối đa 100 điểm)</h2>
+  <div class="subtitle">Giữ nguyên logic, chỉ cân bằng lại về tối đa 100 để đồng bộ với Lớp 1</div>
+
+  <div class="dim-card">
+    <div class="dim-header">
+      <h3>Activity Score sau Cân Bằng Lại</h3>
+      <span class="dim-pts dim-pts-blue">Tổng 100 điểm</span>
+    </div>
+    <table class="score-table">
+      <tr><th>Chiều đánh giá</th><th>Trọng số cũ</th><th>Trọng số mới</th><th>Lý do</th></tr>
+      <tr>
+        <td><strong>Tiến trình Pipeline</strong><br>(công ty đang ở giai đoạn nào)</td>
+        <td>35 điểm</td>
+        <td class="pts">35 điểm (giữ)</td>
+        <td>Vẫn là chỉ báo mạnh nhất — phản ánh deal đang ở bước nào trong phễu bán hàng</td>
+      </tr>
+      <tr>
+        <td><strong>Cường độ Tương tác</strong><br>(BD đã bỏ bao nhiêu công sức)</td>
+        <td>30 điểm</td>
+        <td class="pts">30 điểm (giữ)</td>
+        <td>Đo lường effort BD — số lần liên hệ, kênh sử dụng, tần suất</td>
+      </tr>
+      <tr>
+        <td><strong>Độ Phù Hợp ICP</strong><br>(hồ sơ khách hàng lý tưởng)</td>
+        <td>20 điểm</td>
+        <td class="pts">20 điểm (giữ)</td>
+        <td>Phù hợp ngành, quy mô công ty, vị trí — đã có dữ liệu 932 công ty</td>
+      </tr>
+      <tr>
+        <td><strong>Động lực & Tần suất</strong><br>(tín hiệu gần đây)</td>
+        <td>15 điểm</td>
+        <td class="pts">15 điểm (giữ)</td>
+        <td>Nguồn đang hoạt động, deal đang mở, cột mốc gần nhất</td>
+      </tr>
+    </table>
+    <div class="note-box">
+      <strong>Tại sao giữ nguyên?</strong> Activity Score đã có dữ liệu chấm điểm cho 932 công ty. Thay đổi sẽ mất dữ liệu lịch sử và phải chấm lại toàn bộ. Logic 4 chiều này vẫn đúng — chỉ cần bổ sung Lớp 1 để có góc nhìn toàn diện hơn. Sau khi vận hành 1–2 tháng, có thể tinh chỉnh trọng số dựa trên kết quả thực tế (VD: nếu Cường độ Tương tác không tương quan với tỷ lệ thắng, giảm trọng số).
+    </div>
+  </div>
+</div>
+
+<!-- 05 -->
+<div class="section">
+  <div class="section-number">05 — Ví dụ thực tế</div>
+  <h2>Áp Dụng Framework lên 5 Công Ty</h2>
+  <div class="subtitle">So sánh scoring cũ (chỉ Activity) với scoring mới (Opportunity + Activity) để thấy sự khác biệt</div>
+
+  <div class="example-card">
+    <h4>Techcombank</h4>
+    <div class="meta">Tài chính | Điểm cũ: 79 (A-HOT) | Phụ trách: Đại | Deal: 53 tỷ, GP2 6%</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;"><strong style="color:var(--text)">Opportunity Score: 72/100</strong> — Quy mô deal cực lớn (10/10) nhưng GP2 chỉ 6% (2/8). Sản phẩm phù hợp tốt (Media Performance = lõi PMAX). Đang vào Q1 — cao điểm Tài chính. Tập đoàn nên quy trình mua phức tạp. CoE Media còn năng lực.</p>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D1. Tiềm năng doanh thu</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-cyan" style="width:52%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-cyan)">13/25</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D2. Phù hợp sản phẩm</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-blue" style="width:80%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-blue)">16/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D3. Thời điểm mùa vụ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-orange" style="width:75%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-orange)">15/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D4. Cấu trúc mua hàng</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-purple" style="width:47%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-purple)">7/15</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D5. Năng lực triển khai</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-yellow" style="width:80%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-yellow)">8/10</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D6. Lịch sử quan hệ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-red" style="width:30%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-red)">3/10</span>
+    </div>
+    <p style="font-size:13px;margin-top:16px;color:var(--accent-cyan);font-family:'DM Mono',monospace;">
+      Activity: 79 | Opportunity: 72 &rarr; Q2 ĐẨY ĐỂ CHỐT
+    </p>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:4px;">Nhận định: Đang đúng hướng — deal lớn, timing tốt, hoạt động cao. Nhưng GP2 6% là cờ đỏ. Cần đánh giá: 53 tỷ &times; 6% = 3,18 tỷ GP2 — với công sức pitch deal này (BD cấp cao + nhiều vòng) có đáng không? So sánh: Kiến Á 9 tỷ &times; 33% = 2,97 tỷ GP2 với công sức nhỏ hơn nhiều.</p>
+  </div>
+
+  <div class="example-card">
+    <h4>Amazon Vietnam</h4>
+    <div class="meta">Công nghệ/Bán lẻ | Điểm cũ: 45 (C-NURTURE) | Phụ trách: Ngọc | CLV: +132% tăng trưởng</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;"><strong style="color:var(--text)">Opportunity Score: 68/100</strong> — CLV đang tăng mạnh (+132%). Nhu cầu sản phẩm phù hợp (TMĐT, Media). Tập đoàn đa quốc gia nhưng có team nội địa quyết định nhanh hơn. Chưa có quan hệ sâu.</p>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D1. Tiềm năng doanh thu</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-cyan" style="width:72%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-cyan)">18/25</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D2. Phù hợp sản phẩm</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-blue" style="width:65%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-blue)">13/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D3. Thời điểm mùa vụ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-orange" style="width:50%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-orange)">10/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D4. Cấu trúc mua hàng</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-purple" style="width:60%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-purple)">9/15</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D5. Năng lực triển khai</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-yellow" style="width:70%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-yellow)">7/10</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D6. Lịch sử quan hệ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-red" style="width:50%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-red)">5/10</span>
+    </div>
+    <p style="font-size:13px;margin-top:16px;color:var(--accent-cyan);font-family:'DM Mono',monospace;">
+      Activity: 45 | Opportunity: 68 &rarr; Q1 KÍCH HOẠT NGAY
+    </p>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:4px;">Nhận định: Đây là ví dụ điển hình scoring cũ "bỏ sót" — C-NURTURE vì hoạt động thấp, nhưng Opportunity 68 cho thấy cơ hội lớn (CLV tăng 132%, doanh thu đang tăng). Q1 = cần phân bổ BD ngay, không để yên như hiện tại.</p>
+  </div>
+
+  <div class="example-card">
+    <h4>NIMO TV</h4>
+    <div class="meta">Công nghệ | Điểm cũ: 39 (C-NURTURE) | Phụ trách: Ngọc | Deal: 270 triệu, Pinpoint chưa phản hồi</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;"><strong style="color:var(--text)">Opportunity Score: 22/100</strong> — Deal nhỏ (270 triệu, dưới mục tiêu 300 triệu). Ngoài ngành trọng tâm. Không có người liên hệ cấp cao. Không có kết nối giới thiệu.</p>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D1. Tiềm năng doanh thu</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-cyan" style="width:16%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-cyan)">4/25</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D2. Phù hợp sản phẩm</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-blue" style="width:25%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-blue)">5/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D3. Thời điểm mùa vụ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-orange" style="width:15%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-orange)">3/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D4. Cấu trúc mua hàng</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-purple" style="width:33%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-purple)">5/15</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D5. Năng lực triển khai</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-yellow" style="width:30%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-yellow)">3/10</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D6. Lịch sử quan hệ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-red" style="width:20%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-red)">2/10</span>
+    </div>
+    <p style="font-size:13px;margin-top:16px;color:var(--accent-orange);font-family:'DM Mono',monospace;">
+      Activity: 39 | Opportunity: 22 &rarr; Q3 HẠ ƯU TIÊN
+    </p>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:4px;">Nhận định: Scoring cũ xếp C-NURTURE (vẫn giữ trong pipeline), nhưng Opportunity cho thấy rõ: deal nhỏ, ngoài ngành, không có kết nối — nên hạ ưu tiên để giải phóng thời gian Ngọc cho Golden Comfee (3,5 tỷ) hoặc tìm deal mới.</p>
+  </div>
+
+  <div class="example-card">
+    <h4>Menard Vietnam</h4>
+    <div class="meta">Làm đẹp | Điểm cũ: 48 (C-NURTURE) | Phụ trách: Thảo | CLV: +66% tăng trưởng, hiện 150 triệu</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;"><strong style="color:var(--text)">Opportunity Score: 71/100</strong> — CLV tăng trưởng mạnh. Làm đẹp là ngành ưu tiên. Đang vào cửa sổ trước mùa cao điểm (T9–T12). Có lịch sử làm việc tốt. Tiềm năng bán chéo cao (Influencer + Livestream).</p>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D1. Tiềm năng doanh thu</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-cyan" style="width:68%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-cyan)">17/25</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D2. Phù hợp sản phẩm</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-blue" style="width:85%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-blue)">17/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D3. Thời điểm mùa vụ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-orange" style="width:50%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-orange)">10/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D4. Cấu trúc mua hàng</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-purple" style="width:60%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-purple)">9/15</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D5. Năng lực triển khai</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-yellow" style="width:80%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-yellow)">8/10</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D6. Lịch sử quan hệ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-red" style="width:100%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-red)">10/10</span>
+    </div>
+    <p style="font-size:13px;margin-top:16px;color:var(--accent-red);font-family:'DM Mono',monospace;">
+      Activity: 48 | Opportunity: 71 &rarr; Q1 KÍCH HOẠT NGAY
+    </p>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:4px;">Nhận định: Scoring cũ xếp C-NURTURE (thấp) vì hoạt động chưa nhiều. Nhưng Opportunity 71 — rất cao. Khách hiện tại, CLV đang tăng, Làm đẹp là ngành ưu tiên, tiềm năng bán chéo nhiều sản phẩm. Đây là "vàng bỏ quên" — cần tăng điểm chạm ngay, đặt cuộc họp đánh giá kinh doanh quý để đề xuất thêm Influencer + Livestream.</p>
+  </div>
+
+  <div class="example-card">
+    <h4>FE Credit</h4>
+    <div class="meta">Tài chính | Điểm cũ: 68 (B-WARM) | Phụ trách: Ngọc | CLV: -10,8 tỷ, ĐANG GIẢM</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;"><strong style="color:var(--text)">Opportunity Score: 31/100</strong> — CLV giảm nghiêm trọng (-10,8 tỷ). Khách cũ có vấn đề. GP2 không rõ. Tuy Tài chính là ngành ưu tiên nhưng quan hệ bị tổn hại cần được phản ánh.</p>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D1. Tiềm năng doanh thu</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-cyan" style="width:24%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-cyan)">6/25</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D2. Phù hợp sản phẩm</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-blue" style="width:60%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-blue)">12/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D3. Thời điểm mùa vụ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-orange" style="width:25%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-orange)">5/20</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D4. Cấu trúc mua hàng</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-purple" style="width:33%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-purple)">5/15</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D5. Năng lực triển khai</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-yellow" style="width:30%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-yellow)">3/10</span>
+    </div>
+    <div class="score-bar-row">
+      <span class="score-bar-label">D6. Lịch sử quan hệ</span>
+      <div class="score-bar-track"><div class="score-bar-fill fill-red" style="width:0%"></div></div>
+      <span class="score-bar-pts" style="color:var(--accent-red)">0/10</span>
+    </div>
+    <p style="font-size:13px;margin-top:16px;color:var(--accent-orange);font-family:'DM Mono',monospace;">
+      Activity: 68 | Opportunity: 31 &rarr; Q4 ĐÁNH GIÁ LẠI
+    </p>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:4px;">Nhận định: Scoring cũ vẫn xếp B-WARM vì hoạt động còn — nhưng Opportunity chỉ 31. Q4 = Đánh giá lại: PMAX đã bỏ công sức nhưng cơ hội thực tế thấp (CLV âm, quan hệ bị hỏng). Cần quyết định: cuộc họp giữ chân có đáng không? Nếu không &rarr; chuyển công sức sang khách Q1.</p>
+  </div>
+</div>
+
+<!-- 06 -->
+<div class="section">
+  <div class="section-number">06 — Lộ trình triển khai</div>
+  <h2>Roadmap Triển Khai 4 Tuần</h2>
+  <div class="subtitle">Từ framework đến vận hành — bước cụ thể cho team BD 5 người</div>
+
+  <div class="dim-card">
+    <table class="score-table">
+      <tr><th>Tuần</th><th>Công việc</th><th>Phụ trách</th><th>Đầu ra</th></tr>
+      <tr>
+        <td><strong>Tuần 1</strong><br>Thu thập dữ liệu</td>
+        <td>Thu thập dữ liệu cho 6 chiều mới của Lớp 1. Tập trung Top 100 công ty trước (đã có trên demo). Mỗi BD tự điền dữ liệu cho danh mục khách của mình.</td>
+        <td>5 BD + Ngọc dẫn dắt</td>
+        <td>File Excel với 6 cột mới cho Top 100</td>
+      </tr>
+      <tr>
+        <td><strong>Tuần 2</strong><br>Chấm điểm & Hiệu chỉnh</td>
+        <td>Áp dụng quy tắc scoring lên Top 100. So sánh Opportunity Score với Activity Score hiện tại. Xem phân bổ có hợp lý không. Điều chỉnh trọng số nếu cần.</td>
+        <td>Ngọc + Vân Anh duyệt</td>
+        <td>Ma trận Ưu tiên cho Top 100, bảng so sánh cũ và mới</td>
+      </tr>
+      <tr>
+        <td><strong>Tuần 3</strong><br>Mở rộng & Tự động hóa</td>
+        <td>Mở rộng scoring cho 932 công ty (nhiều công ty sẽ dùng điểm mặc định vì thiếu dữ liệu — chấp nhận được, sẽ tinh chỉnh dần). Tích hợp vào Agent 1 của BD OS.</td>
+        <td>Ngọc + team Kỹ thuật</td>
+        <td>Scoring đầy đủ 932 công ty với hệ thống 2 lớp</td>
+      </tr>
+      <tr>
+        <td><strong>Tuần 4</strong><br>Vận hành & Đánh giá</td>
+        <td>Đưa vào vận hành: mỗi sáng Agent 4 gửi kế hoạch hành động dựa trên Ma trận Ưu tiên mới. Đánh giá sau 1 tuần: khách Q1 có được tiếp cận không? Khách Q4 có được xem lại không?</td>
+        <td>Toàn team BD</td>
+        <td>Kế hoạch hành động hàng ngày từ Agent 4, báo cáo đánh giá tuần</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="note-box">
+    <strong>Lưu ý quan trọng về dữ liệu:</strong> Không cần 100% dữ liệu đầy đủ để bắt đầu. Với những công ty thiếu thông tin, dùng điểm mặc định trung bình (VD: Cấu trúc mua hàng = 8/15 nếu chưa biết). Khi BD tương tác và thu thập thêm thông tin, cập nhật dần. Hệ thống tốt là hệ thống sống — dữ liệu được tinh chỉnh liên tục qua mỗi lần tương tác, không phải làm một lần rồi để đó.
+  </div>
+</div>
+
+<div style="text-align:center;padding:40px 0;border-top:1px solid var(--border);margin-top:40px;">
+  <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;">PMAX BD OS — Scoring Framework V2</div>
+  <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">Xây dựng cho team BD 5 người | 932 công ty | 10 chiều đánh giá | Hệ thống 2 lớp</div>
+  <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Phiên bản 1.0 — Tháng 3/2026</div>
+</div>
+
+</div>
+</body>
+</html>
